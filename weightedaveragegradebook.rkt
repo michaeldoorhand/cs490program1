@@ -72,24 +72,37 @@
 ; iterates through a list of our student records--pull out first and last names, 
 ; pass the rest of the list down to be averaged. 
 (define (compute-avgs lst)
-  (define (avg-score lst)
+  (define (weighted-avg lst)
     (let ([nums (map string->number lst)])
-      (apply + (map (lambda (x) (* x .35)) (list (first nums) (second nums) (third nums) (fourth nums) (fifth nums))))))
-      ;(* (exact->inexact (/ (+ (first nums) (second nums) (third nums) (fourth nums) (fifth nums)) 5)) .35 )
-      ;(* (exact->inexact (/ (+ (sixth nums) (seventh nums) (eighth nums)) 3)) .65 )))
+      (let ([quiz% 
+                (exact->inexact (* (/ (+ (first nums) (second nums) (third nums) (fourth nums) (fifth nums)) 100) .35))])
+        (let ([exam%
+                (exact->inexact (* (/ (+ (sixth nums) (seventh nums) (eighth nums)) 300) .65))])
+           (+ quiz% exam%)))))
       
-  
-  (define (avg-scores lst)
-    (let ([nums (map string->number lst)])
-      (exact->inexact (/ (apply + nums) (length nums)))))
   (if (empty? lst)
       empty
       (let
           ([m (first lst)]
           [n (first (rest lst))])
-          (list m n (avg-score (rest (rest lst)))))))
+          (list m n (~r #:precision '(= 2) (* (weighted-avg (rest (rest lst))) 100))  (get-grade (weighted-avg (rest (rest lst))))     ))))
 
-
+(define (get-grade %)
+  (define (between grade upper lower)
+    (if (and (> grade lower) (< grade upper)) #T #F))
+  (cond [(between % 1     .93) "A"]
+        [(between % .9299 .9 ) "A-"]
+        [(between % .8999 .87) "B+"]
+        [(between % .8699 .83) "B"]
+        [(between % .8299 .8 ) "B-"]
+        [(between % .7999 .77) "C+"]
+        [(between % .7699 .73) "C"]
+        [(between % .7299 .7 ) "C-"]
+        [(between % .6999 .67) "D+"]
+        [(between % .6699 .63) "D"]
+        [(between % .6299 .6 ) "D-"]
+        [else "F"]))
+ 
 ; output preparation. Tail recursive. Take the first list-of-strings, 
 ; build the first name, last name, convert the average to a string, finish 
 ; with newline. Add the 'line' string to our growing output string, iterate to 
@@ -100,7 +113,7 @@
         so-far
         (letrec (
                  [line (first lst)]
-                 [outline (string-append (cadr line) " " (car line) " " (number->string (caddr line)) "\n")])
+                 [outline (string-append (cadr line) " " (car line) " "  (caddr line) " " (fourth line) "\n")])
           (iter (rest lst) (string-append so-far outline)))))
   (iter lst ""))
 
